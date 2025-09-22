@@ -1,0 +1,44 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout your repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Set up Docker (Render uses container images for services)
+      - name: Log in to Render Container Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.RENDER_REGISTRY_USERNAME }}
+          password: ${{ secrets.RENDER_REGISTRY_PASSWORD }}
+          registry: registry.render.com
+
+      # 3. Build and push the backend image
+      - name: Build & Push Backend Image
+        run: |
+          docker build -t registry.render.com/${{ secrets.RENDER_BACKEND_SERVICE_NAME }}:latest ./backend
+          docker push registry.render.com/${{ secrets.RENDER_BACKEND_SERVICE_NAME }}:latest
+
+      # 4. Build and push the frontend image
+      - name: Build & Push Frontend Image
+        run: |
+          docker build -t registry.render.com/${{ secrets.RENDER_FRONTEND_SERVICE_NAME }}:latest ./frontend
+          docker push registry.render.com/${{ secrets.RENDER_FRONTEND_SERVICE_NAME }}:latest
+
+      # 5. Trigger Render Deploy Hooks (set up Deploy Hook URLs in Render dashboard)
+      - name: Trigger Backend Deploy Hook
+        run: |
+          curl -X POST ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+
+      - name: Trigger Frontend Deploy Hook
+        run: |
+          curl -X POST ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
