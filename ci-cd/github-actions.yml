@@ -1,0 +1,5 @@
+docker login registry.render.com -u ${{ secrets.RENDER_REGISTRY_USERNAME }} -p ${{ secrets.RENDER_REGISTRY_PASSWORD }}
+docker build -t registry.render.com/${{ secrets.RENDER_BACKEND_SERVICE_NAME }}:latest ./backend
+docker push registry.render.com/${{ secrets.RENDER_BACKEND_SERVICE_NAME }}:latest
+curl -X POST ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+
